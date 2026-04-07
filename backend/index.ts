@@ -10,7 +10,7 @@ const port = 7893;
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://tamber.kiseki-miracle.dev"],
+    origin: ["http://localhost:7895", "https://convergence.kiseki-miracle.dev"],
     credentials: true,
   },
 });
@@ -19,7 +19,7 @@ const SECRET_KEY = "3uAqFu0ZrDs7Wur9eGx0HwTV6UFoASG2P5T6dqSyRhW";
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://tamber.kiseki-miracle.dev"],
+    origin: ["http://localhost:7895", "https://convergence.kiseki-miracle.dev"],
     credentials: true,
   }),
 );
