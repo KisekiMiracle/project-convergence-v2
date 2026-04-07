@@ -10,7 +10,6 @@ RUN bun install
 
 COPY . .
 
-EXPOSE 7895
+EXPOSE 3210
 
-CMD ["bun", "run", "dev"]
-
+CMD ["bun", "index.ts"]

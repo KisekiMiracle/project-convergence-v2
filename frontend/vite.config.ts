@@ -7,4 +7,9 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  server: {
+    host: true, // binds to 0.0.0.0 — required inside Docker
+    port: 7895,
+    allowedHosts: ["convergence.kiseki-miracle.dev"],
+  },
 });
