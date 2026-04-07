@@ -43,7 +43,7 @@ services:
     environment:
       PGPORT: 5433
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql-project-convergence/data
     healthcheck:
       test:
         [
