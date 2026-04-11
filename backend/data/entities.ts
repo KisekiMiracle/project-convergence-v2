@@ -1,3 +1,5 @@
+import { js } from "~/utils/template-strings";
+
 interface EntityModel {
   name: string;
   lastName: string;
@@ -32,7 +34,7 @@ export class Entity {
   public critRate: number;
   public status: JSON[];
   public skills: string[];
-  public target: JSON[];
+  public target: Entity[];
 
   constructor({
     name,
@@ -80,7 +82,50 @@ export class Entity {
 
   init() {}
 
-  makeTargets() {}
+  public modifyHp(amount: number): number {
+    const oldHp = this.hp;
+    this.hp = Math.max(0, Math.min(this.maxHp, this.hp + amount));
+    return this.hp - oldHp; // Returns the actual change (e.g., +20 or -15)
+  }
+
+  makeTargets(targets: Entity[], scope: string) {
+    // eg. targets = [slime1, slime2, slime3] <- all Entities
+    // eg. scope = All Enemies
+    this.target = []; // cleanup, in case.
+    const presets: Record<string, () => Entity[]> = {
+      //----
+      "All Enemies": () => targets,
+      "All Allies": () => targets,
+      //----
+      "One Enemy": () => [targets[0]].filter(Boolean) as Entity[], // Ensure target exists
+      "One Ally": () => [targets[0]].filter(Boolean) as Entity[],
+      //----
+      "One KOd Ally": () =>
+        [targets.find((t) => t.hp <= 0)].filter(Boolean) as Entity[],
+      "All KOd Allies": () => targets.filter((t) => t.hp <= 0) as Entity[],
+      // ---
+    };
+
+    if (presets[scope]) {
+      this.target = presets[scope]();
+    } else {
+      // We treat 'b' as the individual target being checked in the list
+      try {
+        const filterFn = new Function("b", js`return ${scope};`);
+
+        this.target = targets.filter((t) => {
+          try {
+            return filterFn(t);
+          } catch {
+            return false;
+          }
+        });
+      } catch (e) {
+        console.error("Invalid Target Scope Formula:", scope);
+        this.target = [];
+      }
+    }
+  }
 
   /**
    * Parses a formula string like "a.physDmg * 2 - b.armor"
@@ -88,40 +133,14 @@ export class Entity {
    * @param target The entity being targeted
    */
   public evalFormula(formula: string, target: Entity): number {
-    // 1. Create a data context for the formula
-    // 'a' refers to this entity (the attacker)
-    // 'b' refers to the target (the defender)
     const context = {
-      a: {
-        dmg: this.physDmg,
-        mdmg: this.magDmg,
-        fns: this.finesse,
-        dex: this.dexterity,
-        crit: this.critRate,
-        hp: this.hp,
-        mp: this.mp,
-        lvl: this.level,
-        def: this.armor,
-        mdef: this.magArmor,
-      },
-      b: {
-        def: target.armor,
-        mdef: target.magArmor,
-        hp: target.hp,
-        lvl: target.level,
-      },
+      a: this, // Using 'this' directly captures all numeric properties
+      b: target,
     };
 
     try {
-      // 2. The Parser Logic
-      // We use a Function constructor here.
-      // It's safer than eval() and scoped to our context.
-
-      // @ts-ignore
       const fn = new Function("a", "b", js`return ${formula};`);
       const result = fn(context.a, context.b);
-
-      // Ensure we don't return NaN or negative damage
       return Math.max(0, Math.floor(result));
     } catch (e) {
       console.error("Formula Error:", formula, e);
@@ -129,31 +148,42 @@ export class Entity {
     }
   }
 
-  executeDamage({
-    formula,
-    type,
-  }: {
-    formula: string;
-    type: "physical" | "magical" | "true";
-  }) {
-    // example formula: a.dmg - (1 - b.def)/2
+  public executeAction(
+    formula: string,
+    targets: Entity[],
+    category: "damage" | "healing" | "lifesteal" = "damage",
+  ) {
+    return targets.map((target) => {
+      const value = this.evalFormula(formula, target);
+      let changeA = 0;
+      let changeB = 0;
 
-    switch (type) {
-      case "physical":
-        break;
-      case "magical":
-        break;
-      case "true":
-        break;
-      default:
-        break;
-    }
+      switch (category) {
+        case "damage":
+          changeB = target.modifyHp(-value);
+          break;
+        case "healing":
+          changeB = target.modifyHp(value);
+          break;
+        case "lifesteal":
+          changeB = target.modifyHp(-value);
+          changeA = this.modifyHp(Math.abs(changeB));
+          break;
+        default:
+          break;
+      }
+
+      return {
+        targetName: target.name,
+        targetHp: target.hp,
+        valueB: changeB, // The HP change on the target
+        valueA: changeA, // The HP change on the caster (for lifesteal)
+      };
+    });
   }
 
-  executeHealing() {}
-
   checkIfAlive() {
-    return this.hp >= 1;
+    return this.hp > 0;
   }
 }
 

@@ -4,6 +4,7 @@ import cors from "cors";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
 import CharacterRoutes from "./routes/character/init";
+import CombatTestRoutes from "./routes/character/test";
 
 const app = express();
 const port = 7893;
@@ -34,6 +35,7 @@ app.get("/", (_req, res) => {
 
 // NOTE: Routing
 CharacterRoutes();
+CombatTestRoutes();
 
 // Handle client connections
 io.on("connection", (socket) => {

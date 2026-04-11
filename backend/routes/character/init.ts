@@ -1,10 +1,10 @@
 import { Client } from "~/utils/db";
 import { app } from "~/index";
+import { sql } from "~/utils/template-strings";
 
 export default function CharacterRoutes() {
   app.get("/api/character/setup", async (_req, res) => {
     try {
-      // @ts-ignore
       await Client.query(sql`
         CREATE TABLE IF NOT EXISTS characters (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

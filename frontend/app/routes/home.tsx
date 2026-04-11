@@ -1,13 +1,20 @@
+import SigninForm from "~/components/forms/form";
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Project Convergence" },
+    { name: "description", content: "Welcome to Project Convergence!" },
   ];
 }
 
 export default function Home() {
-  return <Welcome />;
+  return (
+    <main>
+      <section>
+        <div>Content</div>
+        <SigninForm />
+      </section>
+    </main>
+  );
 }
