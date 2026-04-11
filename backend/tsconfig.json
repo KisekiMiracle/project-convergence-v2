@@ -14,6 +14,11 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
 
+    // Paths
+    "paths": {
+      "~/*": ["./*"]
+    },
+
     // Best practices
     "strict": true,
     "skipLibCheck": true,
@@ -25,5 +30,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
-  }
+  },
+  "include": ["./**/*.ts", "./types"]
 }

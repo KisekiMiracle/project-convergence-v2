@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
+import CharacterRoutes from "./routes/character/init";
 
 const app = express();
 const port = 7893;
@@ -28,12 +29,11 @@ app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 app.get("/", (_req, res) => {
-  res.send("Hello World!");
+  res.send("Create your account at https://convergence.kiseki-miracle.dev");
 });
 
-server.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+// NOTE: Routing
+CharacterRoutes();
 
 // Handle client connections
 io.on("connection", (socket) => {
@@ -53,5 +53,8 @@ io.on("connection", (socket) => {
   });
 });
 
-export { app, io, SECRET_KEY };
+server.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
 
+export { app, io, SECRET_KEY };
