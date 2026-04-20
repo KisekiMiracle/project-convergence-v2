@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1775947756093,
+      "tag": "0000_foamy_gateway",
+      "breakpoints": true
+    }
+  ]
+}

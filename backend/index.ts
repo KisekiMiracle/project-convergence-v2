@@ -3,8 +3,8 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { Server } from "socket.io";
 import { createServer } from "node:http";
-import CharacterRoutes from "./routes/character/init";
 import CombatTestRoutes from "./routes/character/test";
+import { AuthRoutes } from "./routes/auth";
 
 const app = express();
 const port = 7893;
@@ -33,9 +33,8 @@ app.get("/", (_req, res) => {
   res.send("Create your account at https://convergence.kiseki-miracle.dev");
 });
 
-// NOTE: Routing
-CharacterRoutes();
 CombatTestRoutes();
+AuthRoutes();
 
 // Handle client connections
 io.on("connection", (socket) => {

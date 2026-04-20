@@ -1,4 +1,6 @@
 import { js } from "~/utils/template-strings";
+import type { InferSelectModel } from "drizzle-orm";
+import { characters } from "~/db/schema";
 
 interface EntityModel {
   name: string;
