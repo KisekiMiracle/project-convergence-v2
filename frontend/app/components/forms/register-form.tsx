@@ -100,7 +100,7 @@ export default function RegisterForm() {
         errors={errors}
         leadingIcon={
           <Icon
-            icon="material-symbols:mail-outline"
+            icon="material-symbols:lock-outline"
             width="21"
             className="label"
           />

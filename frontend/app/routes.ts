@@ -7,5 +7,5 @@ import {
 
 export default [
   layout("./layouts/home.tsx", [index("./routes/page.tsx")]),
-  layout("./layouts/chat.tsx", [route("/chat", "./routes/chat/page.tsx")]),
+  layout("./layouts/main-game.tsx", [route("/play", "./routes/main/home.tsx")]),
 ] satisfies RouteConfig;

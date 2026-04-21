@@ -8,6 +8,7 @@ import { useServerFetch } from "~/hooks/useServerFetch";
 import { Icon } from "@iconify-icon/react";
 import { baseAuthObject } from "~/utils/schema";
 import { cn } from "@sglara/cn";
+import { useNavigate } from "react-router";
 
 const LoginSchema = baseAuthObject.pick({
   email: true,
@@ -19,6 +20,8 @@ type FormData = z.infer<typeof LoginSchema>;
 export default function LoginForm() {
   const [loading, setLoading] = React.useState<boolean>(false);
   const [status, setStatus] = React.useState<Record<string, any> | null>(null);
+
+  const navigate = useNavigate();
 
   const { $fetch } = useServerFetch();
 
@@ -44,7 +47,10 @@ export default function LoginForm() {
       message,
     });
 
-    if (success) reset();
+    if (success) {
+      reset();
+      navigate("/play");
+    }
     setLoading(false);
   };
 
