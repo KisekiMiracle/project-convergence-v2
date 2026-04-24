@@ -37,7 +37,7 @@ export const characters = pgTable(
   "characters",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    authorId: uuid("author_id")
+    ownerId: uuid("owner_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
 
