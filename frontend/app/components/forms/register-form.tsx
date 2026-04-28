@@ -122,7 +122,11 @@ export default function RegisterForm() {
         </div>
       )}
 
-      <button className="btn btn-neutral" type="submit" disabled={loading}>
+      <button
+        className="w-full flex items-center justify-center rounded-md bg-neutral-900 text-white"
+        type="submit"
+        disabled={loading}
+      >
         {loading ? <span>Loading...</span> : <span>Submit</span>}
       </button>
     </form>
