@@ -6,6 +6,10 @@ import { createServer } from "node:http";
 import CombatTestRoutes from "./routes/character/test";
 import { AuthRoutes } from "./routes/auth";
 import SocketRoutes from "./routes/socket";
+import DBItemSeed from "./routes/db/seed/items";
+import InventoryRoutes from "./routes/player/inventory";
+import { Queue } from "bullmq";
+import { redis } from "~/utils/redis";
 
 const app = express();
 const port = 7893;
@@ -42,6 +46,10 @@ app.get("/", (_req, res) => {
 CombatTestRoutes();
 AuthRoutes();
 
+InventoryRoutes();
+
+DBItemSeed();
+
 // Handle client connections
 io.on("connection", async (socket) => {
   console.log("Client connected");
@@ -65,6 +73,10 @@ io.on("connection", async (socket) => {
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
+});
+
+export const notificationQueue = new Queue("notifications", {
+  connection: redis,
 });
 
 export { app, io, SECRET_KEY };

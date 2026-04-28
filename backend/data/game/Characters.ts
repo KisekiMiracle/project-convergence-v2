@@ -1,0 +1,51 @@
+// NOTE: Update #001 - A guide to the multiverse.
+
+import { Character } from "../entities";
+
+export const Luciana = new Character({
+  id: crypto.randomUUID(),
+  name: "Luciana",
+  lastName: "Leclair",
+  gender: "female",
+  height: 159,
+  job: "Magifencer",
+  weapon: "Fermata",
+  hp: 55,
+  maxHp: 55,
+  mp: 20,
+  maxMp: 20,
+  level: 1,
+  exp: 0,
+  expToLevelUp: 200,
+  armor: 3,
+  magArmor: 0,
+  physDmg: 15,
+  magDmg: 18,
+  dexterity: 12,
+  finesse: 14,
+  critRate: 0.0,
+});
+
+export const Ashe = new Character({
+  id: crypto.randomUUID(),
+  name: "Ashe",
+  lastName: "Grayson",
+  gender: "female",
+  height: 164,
+  job: "Apothecary",
+  weapon: "Tome of Healing Alchemy Vol. II",
+  hp: 35,
+  maxHp: 35,
+  mp: 40,
+  maxMp: 40,
+  level: 1,
+  exp: 0,
+  expToLevelUp: 240,
+  armor: 2,
+  magArmor: 5,
+  physDmg: 4,
+  magDmg: 24,
+  dexterity: 10,
+  finesse: 10,
+  critRate: 0.0,
+});

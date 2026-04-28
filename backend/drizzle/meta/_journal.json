@@ -8,6 +8,27 @@
       "when": 1775947756093,
       "tag": "0000_foamy_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777157773578,
+      "tag": "0001_overconfident_sleepwalker",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777177392554,
+      "tag": "0002_green_black_widow",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777265716297,
+      "tag": "0003_blue_hellion",
+      "breakpoints": true
     }
   ]
 }

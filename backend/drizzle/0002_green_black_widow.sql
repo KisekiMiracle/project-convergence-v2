@@ -1,0 +1,2 @@
+ALTER TABLE "user_items" ALTER COLUMN "metadata" SET DEFAULT '{}'::jsonb;--> statement-breakpoint
+ALTER TABLE "user_items" ADD CONSTRAINT "user_items_owner_id_definition_id_unique" UNIQUE("owner_id","definition_id");

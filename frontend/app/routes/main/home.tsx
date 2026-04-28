@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import type { Message } from "react-hook-form";
 import { useSocket, useSocketEvent } from "~/hooks/use-socket";
 import type { Route } from "./+types/home";
+import { useOutletContext } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -11,5 +12,12 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function HomePage() {
-  return <section className="bg-white w-full min-h-screen">Homepage.</section>;
+  const user = useOutletContext();
+
+  return (
+    <div>
+      <h1>Homepage</h1>
+      <p>{JSON.stringify(user)}</p>
+    </div>
+  );
 }

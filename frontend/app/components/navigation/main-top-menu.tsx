@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 
-export default function Topmenu() {
+export default function MainTopMenu() {
   return (
     <motion.aside
       layout

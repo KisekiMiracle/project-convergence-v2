@@ -8,6 +8,8 @@ import {
   jsonb,
   timestamp,
   check,
+  unique,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { sql, type InferSelectModel } from "drizzle-orm";
 
@@ -33,13 +35,10 @@ export const profiles = pgTable("profiles", {
 });
 export type Profile = InferSelectModel<typeof profiles>;
 
-export const characters = pgTable(
-  "characters",
+export const characterDefinitions = pgTable(
+  "character_definitions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    ownerId: uuid("owner_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
 
     // Biography
     name: text("name").notNull(),
@@ -50,6 +49,7 @@ export const characters = pgTable(
     // Progression
     level: integer("level").default(1),
     experience: integer("experience").default(0),
+    experienceToLvlUp: integer("experience_to_level_up").default(200),
 
     // Vitality
     currentHp: integer("current_hp").default(100),
@@ -70,15 +70,17 @@ export const characters = pgTable(
     // Special Stats
     // numeric(precision, scale) -> numeric(5, 2)
     criticalRate: numeric("critical_rate", { precision: 5, scale: 2 }).default(
-      "0.05",
+      "0.00",
     ),
+
+    // Equipment Slots
+    weapon: uuid("weapon").references(() => itemDefinitions.id),
 
     // Status & Skills
     // Note: JSONB columns are typed as 'unknown' by default,
     // but you can cast them: jsonb("status").$type<StatusEffect[]>()
-    status: jsonb("status").default([]),
-    skills: uuid("skills").array().default([]),
-    equippedSkills: jsonb("equipped_skills").default([]),
+    status: jsonb("status").array().default([]), // e.g. { statusId, duration }
+    skills: jsonb("skills").array().default([]), // e.g. { skillId, description, cost, cooldown }
 
     // Meta
     currentRoomId: text("current_room_id").default("guilds_training_grounds"),
@@ -92,4 +94,67 @@ export const characters = pgTable(
     ),
   }),
 );
-export type Character = InferSelectModel<typeof characters>;
+
+// NOTE: (What the player owns)
+export const userCharacters = pgTable(
+  "user_characters",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ownerId: uuid("owner_id").references(() => users.id),
+    definitionId: uuid("definition_id").references(
+      () => characterDefinitions.id,
+    ),
+    // Equipment Slots
+    equipSlot1: uuid("equip_slot_1").references(() => itemDefinitions.id),
+    equipSlot2: uuid("equip_slot_2").references(() => itemDefinitions.id),
+    equipSlot3: uuid("equip_slot_3").references(() => itemDefinitions.id),
+    equipSlot4: uuid("equip_slot_4").references(() => itemDefinitions.id),
+    equipSlot5: uuid("equip_slot_5").references(() => itemDefinitions.id),
+    equipSlot6: uuid("equip_slot_6").references(() => itemDefinitions.id),
+    // ---
+    firstMetAt: timestamp("first_met_at", { withTimezone: true }).defaultNow(),
+    // Optional: Only add columns here if the item is unique (e.g., enchanted gear)
+    metadata: jsonb("metadata").default({}), // e.g. { type, rarity, enchantment }
+  },
+  (t) => ({
+    unq: unique().on(t.ownerId, t.definitionId),
+  }),
+);
+export type Character = InferSelectModel<typeof userCharacters>;
+
+// NOTE: (Read-only for players)
+export const itemDefinitions = pgTable("item_definitions", {
+  id: uuid("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  effect: text("effect").notNull(), // The formula
+  scope: text("scope").notNull(),
+  message: text("message").notNull(),
+  category: text("category").notNull(), // 'consumable', 'key', 'equippable'
+  slot: text("slot"), // 'unique', 'equippable' (null for consumables)
+});
+
+// NOTE: (What the player owns)
+export const userItems = pgTable(
+  "user_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ownerId: uuid("owner_id").references(() => users.id),
+    definitionId: uuid("definition_id").references(() => itemDefinitions.id),
+    amount: integer("amount").default(1),
+    // Optional: Only add columns here if the item is unique (e.g., enchanted gear)
+    metadata: jsonb("metadata").default({}), // e.g. { type, rarity, enchantment }
+  },
+  (t) => ({
+    unq: unique().on(t.ownerId, t.definitionId),
+  }),
+);
+export type Inventory = InferSelectModel<typeof userItems>;
+
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});

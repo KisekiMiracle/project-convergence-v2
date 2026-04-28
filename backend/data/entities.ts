@@ -1,8 +1,11 @@
 import { js } from "~/utils/template-strings";
 import type { InferSelectModel } from "drizzle-orm";
-import { characters } from "~/db/schema";
+import { characterDefinitions } from "~/db/schema";
+import type { UUID } from "node:crypto";
+import { Action } from "./actions";
 
 interface EntityModel {
+  id: UUID;
   name: string;
   lastName: string;
   level: number;
@@ -20,6 +23,7 @@ interface EntityModel {
 }
 
 export class Entity {
+  public id: UUID;
   public name: string;
   public lastName: string;
   public level: number;
@@ -36,9 +40,10 @@ export class Entity {
   public critRate: number;
   public status: JSON[];
   public skills: string[];
-  public target: Entity[];
+  public target: Array<Entity>;
 
   constructor({
+    id,
     name,
     lastName,
     level,
@@ -54,6 +59,7 @@ export class Entity {
     dexterity,
     critRate,
   }: EntityModel) {
+    this.id = id;
     this.name = name;
     this.lastName = lastName;
 
@@ -90,98 +96,22 @@ export class Entity {
     return this.hp - oldHp; // Returns the actual change (e.g., +20 or -15)
   }
 
-  makeTargets(targets: Entity[], scope: string) {
-    // eg. targets = [slime1, slime2, slime3] <- all Entities
-    // eg. scope = All Enemies
-    this.target = []; // cleanup, in case.
-    const presets: Record<string, () => Entity[]> = {
-      //----
-      "All Enemies": () => targets,
-      "All Allies": () => targets,
-      //----
-      "One Enemy": () => [targets[0]].filter(Boolean) as Entity[], // Ensure target exists
-      "One Ally": () => [targets[0]].filter(Boolean) as Entity[],
-      //----
-      "One KOd Ally": () =>
-        [targets.find((t) => t.hp <= 0)].filter(Boolean) as Entity[],
-      "All KOd Allies": () => targets.filter((t) => t.hp <= 0) as Entity[],
-      // ---
-    };
-
-    if (presets[scope]) {
-      this.target = presets[scope]();
-    } else {
-      // We treat 'b' as the individual target being checked in the list
-      try {
-        const filterFn = new Function("b", js`return ${scope};`);
-
-        this.target = targets.filter((t) => {
-          try {
-            return filterFn(t);
-          } catch {
-            return false;
-          }
-        });
-      } catch (e) {
-        console.error("Invalid Target Scope Formula:", scope);
-        this.target = [];
-      }
-    }
+  public modifyMp(amount: number): number {
+    const oldMp = this.mp;
+    this.mp = Math.max(0, Math.min(this.maxMp, this.mp + amount));
+    return this.mp - oldMp; // Returns the actual change (e.g., +20 or -15)
   }
 
-  /**
-   * Parses a formula string like "a.physDmg * 2 - b.armor"
-   * @param formula The string formula to evaluate
-   * @param target The entity being targeted
-   */
-  public evalFormula(formula: string, target: Entity): number {
-    const context = {
-      a: this, // Using 'this' directly captures all numeric properties
-      b: target,
-    };
-
-    try {
-      const fn = new Function("a", "b", js`return ${formula};`);
-      const result = fn(context.a, context.b);
-      return Math.max(0, Math.floor(result));
-    } catch (e) {
-      console.error("Formula Error:", formula, e);
-      return 0;
-    }
-  }
-
-  public executeAction(
+  public performAction(
     formula: string,
+    scope: string,
     targets: Entity[],
-    category: "damage" | "healing" | "lifesteal" = "damage",
+    cat: "damage" | "healing" | "lifesteal" = "damage",
+    message: string,
   ) {
-    return targets.map((target) => {
-      const value = this.evalFormula(formula, target);
-      let changeA = 0;
-      let changeB = 0;
-
-      switch (category) {
-        case "damage":
-          changeB = target.modifyHp(-value);
-          break;
-        case "healing":
-          changeB = target.modifyHp(value);
-          break;
-        case "lifesteal":
-          changeB = target.modifyHp(-value);
-          changeA = this.modifyHp(Math.abs(changeB));
-          break;
-        default:
-          break;
-      }
-
-      return {
-        targetName: target.name,
-        targetHp: target.hp,
-        valueB: changeB, // The HP change on the target
-        valueA: changeA, // The HP change on the caster (for lifesteal)
-      };
-    });
+    const action = new Action(this, formula, scope, message);
+    const resolvedTargets = action.resolveTargets(targets);
+    return action.execute(resolvedTargets, cat);
   }
 
   checkIfAlive() {
@@ -194,13 +124,21 @@ interface CharacterModel extends EntityModel {
   height: number;
   exp: number;
   expToLevelUp: number;
+  job: string;
+  weapon: string;
 }
 
 export class Character extends Entity {
   public gender: string;
+  public height: number;
+  public exp: number;
+  public expToLevelUp: number;
   public equipSkills: JSON[];
+  public job: string;
+  public weapon: string;
 
   constructor({
+    id,
     name,
     lastName,
     level,
@@ -216,8 +154,14 @@ export class Character extends Entity {
     dexterity,
     critRate,
     gender,
+    height,
+    exp,
+    expToLevelUp,
+    job,
+    weapon,
   }: CharacterModel) {
     super({
+      id,
       name,
       lastName,
       level,
@@ -235,6 +179,16 @@ export class Character extends Entity {
     });
 
     this.gender = gender;
+    this.height = height;
+    this.weapon = weapon;
+
+    this.exp = exp;
+    this.expToLevelUp = expToLevelUp;
+
     this.equipSkills = [];
+
+    this.target = [] as Array<Entity | Character>;
+
+    this.job = job;
   }
 }
