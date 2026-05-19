@@ -131,7 +131,9 @@ export const itemDefinitions = pgTable("item_definitions", {
   scope: text("scope").notNull(),
   message: text("message").notNull(),
   category: text("category").notNull(), // 'consumable', 'key', 'equippable'
+  icon: text("icon").notNull(),
   slot: text("slot"), // 'unique', 'equippable' (null for consumables)
+  metadata: jsonb("metadata").default({}), // e.g. { type, rarity, enchantment }
 });
 
 // NOTE: (What the player owns)

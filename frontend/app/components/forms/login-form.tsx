@@ -49,7 +49,7 @@ export default function LoginForm() {
 
     if (success) {
       reset();
-      navigate("/play");
+      return navigate("/play");
     }
     setLoading(false);
   };

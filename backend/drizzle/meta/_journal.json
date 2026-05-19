@@ -29,6 +29,20 @@
       "when": 1777265716297,
       "tag": "0003_blue_hellion",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777514836800,
+      "tag": "0004_remarkable_psynapse",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777518739140,
+      "tag": "0005_bumpy_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

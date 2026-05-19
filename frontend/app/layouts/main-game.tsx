@@ -8,7 +8,7 @@ import { useServerFetch } from "~/hooks/useServerFetch";
 import type { Route } from "./+types/main-game";
 
 // Client-side timing middleware
-async function timingMiddleware({ context }: any, next: () => any) {
+async function timingMiddleware({ context }: any, _next: () => any) {
   const { $fetch } = useServerFetch();
   const { success, user } = await $fetch({
     path: "auth/me",
@@ -18,6 +18,7 @@ async function timingMiddleware({ context }: any, next: () => any) {
   if (!success) {
     throw redirect("/");
   }
+
   context.set(userContext, user);
 }
 
@@ -27,13 +28,32 @@ export const clientMiddleware: Route.ClientMiddlewareFunction[] = [
 
 export async function clientLoader({ context }: Route.LoaderArgs) {
   const user = context.get(userContext);
-  return { user };
+
+  // NOTE: Load user Inventory and Characters
+  const baseUrl =
+    import.meta.env.MODE === "production"
+      ? import.meta.env.VITE_API_URL
+      : "http://localhost:7893";
+
+  const [charRes, itemRes] = await Promise.all([
+    fetch(`${baseUrl}/api/player/characters`, { credentials: "include" }),
+    fetch(`${baseUrl}/api/player/inventory`, { credentials: "include" }), // Changed path
+  ]);
+
+  const { characters } = await charRes.json();
+  const { items } = await itemRes.json();
+
+  return { user, characters, items };
 }
 
 export default function MainGameLayout({ loaderData }: Route.ComponentProps) {
   return (
     <div className="relative grid grid-cols-3 w-full max-h-screen bg-muted/40 overflow-y-hidden">
-      <LeftContent user={loaderData.user} />
+      <LeftContent
+        user={loaderData.user}
+        characters={loaderData.characters}
+        items={loaderData.items}
+      />
       <div className="flex flex-col w-full">
         <MainTopMenu />
         <div className="w-full max-h-screen overflow-y-auto">

@@ -7,7 +7,7 @@ import { getItemDefinitionIdByName } from "~/utils/query-inventory-items";
 export default function DBItemSeed() {
   app.get("/api/db/seed", async (_req, res) => {
     try {
-      // await seedItems();
+      await seedItems();
       await seedCharacters();
 
       return res.status(201).send({
@@ -24,16 +24,64 @@ export default function DBItemSeed() {
 
 export async function seedItems() {
   await db.insert(itemDefinitions).values([
+    // {
+    //   id: crypto.randomUUID(),
+    //   name: "Small Potion of Healing",
+    //   description:
+    //     "A very small flask containing a liquid that restores 50HP to the user.",
+    //   effect: "50",
+    //   scope: "One Ally",
+    //   message: "a.name has regained [value] Health Points!",
+    //   category: "consumable",
+    //   icon: "game-icons:round-potion",
+    // },
+    // {
+    //   id: crypto.randomUUID(),
+    //   name: "Medium Potion of Healing",
+    //   description:
+    //     "A large-sized flask containing a liquid that restores 50HP to the user.",
+    //   effect: "200",
+    //   scope: "One Ally",
+    //   message: "a.name has regained [value] Health Points!",
+    //   category: "consumable",
+    //   icon: "game-icons:round-potion",
+    // },
     {
       id: crypto.randomUUID(),
-      name: "Tome of Healing Alchemy Vol. II",
+      name: "Flask of Ignis Fatuos",
       description:
-        "The second volume of the successful series written by Beryl—with no last name.",
-      effect: "0",
-      scope: "none",
-      message: "none",
-      category: "weapon",
+        "A flask that, when thrown, explodes in a 20ft radius, dealing 180 magical damage.",
+      effect: "180 - b.magArmor * 5",
+      scope: "One Ally",
+      message: "a.name has regained [value] Health Points!",
+      category: "consumable",
+      icon: "game-icons:round-bottom-flask",
+      metadata: {
+        rarity: "uncommon",
+      },
     },
+    // {
+    //   id: crypto.randomUUID(),
+    //   name: "Fermata",
+    //   description:
+    //     "A rapier forged out of Amethyst. Particularly an effective catalyst for spellcasting.",
+    //   effect: "0",
+    //   scope: "none",
+    //   message: "none",
+    //   category: "weapon",
+    //   icon: "game-icons:energy-sword",
+    // },
+    // {
+    //   id: crypto.randomUUID(),
+    //   name: "Tome of Healing Alchemy Vol. II",
+    //   description:
+    //     "The second volume of the successful series written by Beryl—with no last name.",
+    //   effect: "0",
+    //   scope: "none",
+    //   message: "none",
+    //   category: "weapon",
+    //   icon: "game-icons:book-cover",
+    // },
   ]);
 }
 

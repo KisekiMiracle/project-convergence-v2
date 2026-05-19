@@ -10,6 +10,8 @@ import DBItemSeed from "./routes/db/seed/items";
 import InventoryRoutes from "./routes/player/inventory";
 import { Queue } from "bullmq";
 import { redis } from "~/utils/redis";
+import { startDiscordBot } from "./services/discord-bot";
+import CharacterRoutes from "./routes/character";
 
 const app = express();
 const port = 7893;
@@ -47,6 +49,7 @@ CombatTestRoutes();
 AuthRoutes();
 
 InventoryRoutes();
+CharacterRoutes();
 
 DBItemSeed();
 
@@ -78,5 +81,7 @@ server.listen(port, () => {
 export const notificationQueue = new Queue("notifications", {
   connection: redis,
 });
+
+startDiscordBot();
 
 export { app, io, SECRET_KEY };

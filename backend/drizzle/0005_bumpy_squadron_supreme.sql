@@ -1,0 +1,1 @@
+ALTER TABLE "item_definitions" ADD COLUMN "icon" text NOT NULL;

@@ -2,18 +2,20 @@ import { app } from "~/index";
 import { requireAuth } from "../auth/require";
 import { db } from "~/utils/db";
 import { userCharacters } from "~/db/schema";
-import { getItemDefinitionIdByName } from "~/utils/query-inventory-items";
+import { getCharacterDefinitionIdByName } from "~/utils/query-inventory-items";
 
-export default function InventoryRoutes() {
-  app.get("/api/player/character/add", requireAuth, async (req, res) => {
-    const { itemName } = req.query;
-    if (!itemName)
+export default function CharacterRoutes() {
+  app.get("/api/player/characters/add", requireAuth, async (req, res) => {
+    const { characterName } = req.query;
+    if (!characterName)
       return res.status(400).send({
         success: false,
-        message: "You need to provide an itemName query param.",
+        message: "You need to provide an characterName query param.",
       });
 
-    const definitionId = await getItemDefinitionIdByName(itemName as string);
+    const definitionId = await getCharacterDefinitionIdByName(
+      characterName as string,
+    );
     if (!definitionId) {
       return res
         .status(404)
@@ -58,8 +60,15 @@ export default function InventoryRoutes() {
       });
     }
   });
-  app.get("/api/player/characters", requireAuth, async (_req, res) => {
+  app.get("/api/player/characters", requireAuth, async (req, res) => {
     try {
+      const characters = await db.query.userCharacters.findMany({
+        where: (t, { eq }) => eq(t.ownerId, req.user!.userId),
+      });
+      return res.status(200).send({
+        success: true,
+        characters,
+      });
     } catch (error) {
       return res.status(500).send({
         success: false,

@@ -1,18 +1,20 @@
 import { app } from "~/index";
 import { requireAuth } from "../auth/require";
 import { db } from "~/utils/db";
-import { userItems } from "~/db/schema";
+import { itemDefinitions, userItems } from "~/db/schema";
 import { getItemDefinitionIdByName } from "~/utils/query-inventory-items";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 
 export default function InventoryRoutes() {
   app.get("/api/player/inventory/add", requireAuth, async (req, res) => {
-    const { itemName } = req.query;
+    const { itemName, amount } = req.query;
     if (!itemName)
       return res.status(400).send({
         success: false,
         message: "You need to provide an itemName query param.",
       });
+
+    console.log(itemName, typeof amount !== "undefined" ? amount : 1);
 
     const definitionId = await getItemDefinitionIdByName(itemName as string);
     if (!definitionId) {
@@ -23,17 +25,19 @@ export default function InventoryRoutes() {
 
     try {
       await db.transaction(async (tx) => {
+        const finalAmount = typeof amount !== "undefined" ? Number(amount) : 1;
+
         await tx
           .insert(userItems)
           .values({
             ownerId: req.user!.userId,
             definitionId,
-            amount: 1,
+            amount: finalAmount,
           })
           .onConflictDoUpdate({
             target: [userItems.ownerId, userItems.definitionId],
             set: {
-              amount: sql`${userItems.amount} + 1`,
+              amount: sql`${userItems.amount} + ${finalAmount}`,
             },
           });
       });
@@ -47,8 +51,31 @@ export default function InventoryRoutes() {
       });
     }
   });
-  app.get("/api/player/inventory", requireAuth, async (_req, res) => {
+  app.get("/api/player/inventory", requireAuth, async (req, res) => {
     try {
+      const items = await db.transaction(async (tx) => {
+        return await tx
+          .select({
+            id: userItems.id,
+            amount: userItems.amount,
+            name: itemDefinitions.name,
+            description: itemDefinitions.description,
+            category: itemDefinitions.category,
+            icon: itemDefinitions.icon,
+            metadata: itemDefinitions.metadata,
+          })
+          .from(userItems)
+          .innerJoin(
+            itemDefinitions,
+            eq(userItems.definitionId, itemDefinitions.id),
+          )
+          .where(eq(userItems.ownerId, req.user!.userId));
+      });
+
+      return res.status(200).send({
+        success: true,
+        items,
+      });
     } catch (error) {
       return res.status(500).send({
         success: false,

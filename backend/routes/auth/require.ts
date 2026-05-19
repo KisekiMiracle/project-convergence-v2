@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 import { SECRET_KEY } from "~/index";
-import { db } from "~/utils/db"; // Using the Drizzle instance now
-import { profiles } from "~/db/schema";
-import { eq } from "drizzle-orm";
+import { Client, db } from "~/utils/db";
+import { profiles, users } from "~/db/schema";
+import { eq, getTableColumns } from "drizzle-orm";
 
 export async function requireAuth(
   req: Request,
@@ -11,8 +11,8 @@ export async function requireAuth(
   next: NextFunction,
 ) {
   const { accessToken, refreshToken } = req.cookies;
+  const profilesCols = getTableColumns(profiles);
 
-  // 1. No Access Token - Check Refresh Token
   if (!accessToken) {
     if (!refreshToken) {
       return res.status(401).send({
@@ -23,8 +23,7 @@ export async function requireAuth(
 
     try {
       const decoded = jwt.verify(refreshToken, SECRET_KEY) as { id: string };
-
-      // Generate new Access Token
+      // NOTE: Create a new AccessToken if the Refresh Token has not expired.
       const access_token = jwt.sign({ id: decoded.id }, SECRET_KEY, {
         expiresIn: "15m",
       });
@@ -36,19 +35,19 @@ export async function requireAuth(
         maxAge: 1000 * 60 * 15,
       });
 
-      // Drizzle query instead of raw pg
-      const userProfile = await db.query.profiles.findFirst({
-        where: eq(profiles.userId, decoded.id),
+      await db.transaction(async (tx) => {
+        const [user] = await tx
+          .select({ ...profilesCols })
+          .from(profiles)
+          .where(eq(profiles.userId, decoded.id));
+        if (!user) {
+          return res.status(401).send({
+            success: false,
+            message: "User no longer exists.",
+          });
+        }
+        req.user = user;
       });
-
-      if (!userProfile) {
-        return res.status(401).send({
-          success: false,
-          message: "User no longer exists.",
-        });
-      }
-
-      req.user = userProfile;
       return next();
     } catch {
       return res.status(401).send({
@@ -58,23 +57,24 @@ export async function requireAuth(
     }
   }
 
-  // 2. Validate existing Access Token
   try {
     const decoded = jwt.verify(accessToken, SECRET_KEY) as { id: string };
 
-    const userProfile = await db.query.profiles.findFirst({
-      where: eq(profiles.userId, decoded.id),
+    await db.transaction(async (tx) => {
+      const [user] = await tx
+        .select({ ...profilesCols })
+        .from(profiles)
+        .where(eq(profiles.userId, decoded.id));
+
+      if (!user) {
+        return res.status(401).send({
+          success: false,
+          message: "User no longer exists.",
+        });
+      }
+      req.user = user;
     });
-
-    if (!userProfile) {
-      return res.status(401).send({
-        success: false,
-        message: "User no longer exists.",
-      });
-    }
-
-    req.user = userProfile;
-    next();
+    return next();
   } catch (error) {
     return res.status(401).send({
       success: false,
