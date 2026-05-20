@@ -14,8 +14,6 @@ export default function InventoryRoutes() {
         message: "You need to provide an itemName query param.",
       });
 
-    console.log(itemName, typeof amount !== "undefined" ? amount : 1);
-
     const definitionId = await getItemDefinitionIdByName(itemName as string);
     if (!definitionId) {
       return res

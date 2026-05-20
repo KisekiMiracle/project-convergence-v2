@@ -6,6 +6,8 @@ import { redirect } from "react-router";
 import { userContext } from "~/context";
 import { useServerFetch } from "~/hooks/useServerFetch";
 import type { Route } from "./+types/main-game";
+import { useGameStore } from "~/store/gameStore";
+import React from "react";
 
 // Client-side timing middleware
 async function timingMiddleware({ context }: any, _next: () => any) {
@@ -47,12 +49,28 @@ export async function clientLoader({ context }: Route.LoaderArgs) {
 }
 
 export default function MainGameLayout({ loaderData }: Route.ComponentProps) {
+  const setCharacters = useGameStore((state) => state.setCharacters);
+  const setItems = useGameStore((state) => state.setItems);
+
+  // Sync loader data into our reactive Zustand store
+  React.useEffect(() => {
+    if (loaderData.characters) setCharacters(loaderData.characters);
+    if (loaderData.items) setItems(loaderData.items);
+  }, [loaderData.characters, loaderData.items, setCharacters, setItems]);
+
+  // Read data Reactively from the store instead of using static loaderData arrays
+  const charactersMap = useGameStore((state) => state.characters);
+  const itemsMap = useGameStore((state) => state.items);
+
+  const charactersList = Object.values(charactersMap);
+  const itemsList = Object.values(itemsMap);
+
   return (
     <div className="relative grid grid-cols-3 w-full max-h-screen bg-muted/40 overflow-y-hidden">
       <LeftContent
         user={loaderData.user}
-        characters={loaderData.characters}
-        items={loaderData.items}
+        characters={charactersList} // Hand down reactive state
+        items={itemsList}
       />
       <div className="flex flex-col w-full">
         <MainTopMenu />

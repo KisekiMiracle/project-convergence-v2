@@ -51,7 +51,7 @@ AuthRoutes();
 InventoryRoutes();
 CharacterRoutes();
 
-DBItemSeed();
+// DBItemSeed();
 
 // Handle client connections
 io.on("connection", async (socket) => {
@@ -78,10 +78,10 @@ server.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
 
-export const notificationQueue = new Queue("notifications", {
-  connection: redis,
-});
+// export const notificationQueue = new Queue("notifications", {
+//   connection: redis,
+// });
 
-startDiscordBot();
+// startDiscordBot();
 
 export { app, io, SECRET_KEY };
